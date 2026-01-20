@@ -13,12 +13,13 @@ const getSupabaseClient = () => {
 }
 
 /**
- * Sube un archivo al storage de Supabase
- * @param {string} bucket - Nombre del bucket
- * @param {string} path - Ruta donde guardar el archivo (ej: 'uploads/imagen.png')
- * @param {Buffer|File} file - Archivo a subir
- * @param {Object} options - Opciones adicionales
- * @param {string} options.contentType - Tipo MIME del archivo
+ * @author Brayan Salas
+ * @description Upload a file to Supabase Storage
+ * @param {string} bucket - Bucket name
+ * @param {string} path - Path to save the file (e.g., 'uploads/image.png')
+ * @param {Buffer|File} file - File to upload
+ * @param {Object} options - Additional options
+ * @param {string} options.contentType - MIME type of the file
  * @param {boolean} options.upsert - Sobrescribir si existe (default: false)
  * @returns {Promise<Object>} - { data, error, publicUrl }
  */

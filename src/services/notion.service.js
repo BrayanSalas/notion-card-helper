@@ -7,7 +7,7 @@ import { chatCompletionWithSystem } from '../utils/openai.util.js'
 const DATABASE_ID = process.env.NOTION_DATABASE_ID
 
 /**
- * Contexto de los proyectos para que la IA tome decisiones
+ * Project context to take decisions
  */
 const PROJECT_CONTEXT = {
   Frontend: 'React - Chatbot que permite dialogar con los usuarios, el proyecto cuenta con una interfaz grafica creada con estilos de tailwindcss, componentes de creative tim para chat, material ui e integraciones con APIs RESTful y sockets, tiene un modulo de autenticación, platicas en tiempo real en grupo, platicas con bots, edición de perfil de usuario.',
@@ -15,7 +15,7 @@ const PROJECT_CONTEXT = {
 }
 
 /**
- * Criterios de prioridad
+ * Priority criteria of bugs/features
  */
 const PRIORITY_CRITERIA = {
   'Very High': 'Sistema caído, bloquea a todos los usuarios, error crítico en producción',
@@ -26,7 +26,7 @@ const PRIORITY_CRITERIA = {
 }
 
 /**
- * Criterios de impacto
+ * Impact criteria of bugs/features
  */
 const IMPACT_CRITERIA = {
   'Very High': 'Afecta a todos los usuarios, sistema completamente inutilizable',
@@ -37,8 +37,9 @@ const IMPACT_CRITERIA = {
 }
 
 /**
- * Valida si el mensaje es relevante para crear un ticket
- * @param {string} message - Mensaje del usuario
+ * @author Brayan Salas
+ * @description Validate if the message is suitable for creating a technical ticket
+ * @param {string} message - User message
  * @returns {Promise<Object>} - { isValid: boolean, reason: string }
  */
 export const validateMessage = async (message) => {
@@ -79,17 +80,18 @@ Responde ÚNICAMENTE con un JSON válido:
     return JSON.parse(cleanResponse)
   } catch (error) {
     console.error('Error parsing validation response:', response)
-    return { isValid: false, reason: 'Error al validar el mensaje' }
+    return { isValid: false, reason: 'Error parsing validation response' }
   }
 }
 
 /**
- * Analiza el mensaje del usuario y genera los datos estructurados para la tarjeta
- * @param {string} message - Mensaje del usuario
- * @returns {Promise<Object>} - Datos estructurados para la tarjeta
+ * @author Brayan Salas
+ * @description Analyze the user message and generate structured data for the card
+ * @param {string} message - User message
+ * @returns {Promise<Object>} - Structured data for the card
  */
 export const analyzeAndGenerateCardData = async (message, uploadedUrls = []) => {
-  // Construir la sección de screenshots solo si hay URLs
+  // Build the screenshots section only if there are URLs
   const screenshotsSection = uploadedUrls.length > 0 
     ? `\n\n## Screenshots adjuntas\n${uploadedUrls.map(url => `![Screenshot](${url})`).join('\n')}`
     : ''
@@ -160,16 +162,11 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura:
     maxTokens: 2000,
   })
 
-  // Parsear la respuesta JSON
   try {
-    // Limpiar la respuesta por si viene con markdown code blocks
     const cleanResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const parsedResponse = JSON.parse(cleanResponse)
 
-    // Agregar las screenshots al contenido si hay URLs
-    if (uploadedUrls.length > 0) {
-      parsedResponse.content += screenshotsSection
-    }
+    if (uploadedUrls.length > 0) parsedResponse.content += screenshotsSection
 
     return parsedResponse
   } catch (error) {
@@ -179,7 +176,8 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura:
 }
 
 /**
- * Convierte Markdown a bloques de Notion
+ * @author Brayan Salas
+ * @description Convert Markdown text to Notion blocks
  * @param {string} markdown - Texto en Markdown
  * @returns {Array} - Bloques de Notion
  */
@@ -291,115 +289,33 @@ const markdownToNotionBlocks = (markdown) => {
 }
 
 /**
- * Crea una tarjeta inteligente analizando el mensaje con IA
- * @param {string} message - Mensaje del usuario
- * @returns {Promise<Object>} - La tarjeta creada
+ * @author Brayan Salas
+ * @description Create a smart Notion card based on the message and optional images
+ * @param {string} message - User message
+ * @param {Array} uploadedUrls - Array of uploaded image URLs
+ * @returns {Promise<Object>} - The created card
  */
 export const createSmartCard = async (message, uploadedUrls = []) => {
-  // Validar el mensaje primero
   const validation = await validateMessage(message)
   
   if (!validation.isValid) {
-    throw new Error(`Mensaje no válido: ${validation.reason}`)
+    throw new Error(`Invalid message: ${validation.reason}`)
   }
 
-  // Analizar el mensaje con IA
   const cardData = await analyzeAndGenerateCardData(message, uploadedUrls)
 
-  // Fecha actual
-  const today = new Date().toISOString().split('T')[0]
-
-  // Construir las propiedades
+  // Notion properties
   const properties = {
     Name: notionProperties.title(cardData.title),
     Project: notionProperties.multiSelect([cardData.project]),
     Priority: notionProperties.select(cardData.priority),
     Impact: notionProperties.select(cardData.impact),
-    Date: notionProperties.date(today),
+    Date: notionProperties.date(new Date().toISOString().split('T')[0]),
     'Project Status': notionProperties.select('Hotfix'),
   }
 
-  // Convertir Markdown a bloques de Notion
+  // Convert to notion blocks
   const children = markdownToNotionBlocks(cardData.content)
-
-  const response = await createDatabaseItem(DATABASE_ID, properties, children)
-
-  return response
-}
-
-/**
- * Crea una nueva tarjeta en la base de datos de Notion
- * @param {Object} cardData - Datos de la tarjeta
- * @param {string} cardData.title - Título de la tarjeta (requerido)
- * @param {string} cardData.project - Proyecto: Frontend, Backend, Mobile
- * @param {string} cardData.date - Fecha en formato YYYY-MM-DD
- * @param {string} cardData.person - Persona asignada: Brayan, Adriana, Jorge
- * @param {string} cardData.priority - Prioridad: Very High, High, Medium, Low, Very Low
- * @param {string} cardData.impact - Impacto: Very High, High, Medium, Low, Very Low
- * @param {string} cardData.body - Contenido del cuerpo de la página
- * @returns {Promise<Object>} - La tarjeta creada
- */
-export const createCard = async (cardData) => {
-  const {
-    title,
-    project,
-    date,
-    person,
-    priority,
-    impact,
-    body,
-    projectStatus
-  } = cardData
-
-  if (!title) {
-    throw new Error('El título es requerido')
-  }
-
-  // Construir las propiedades
-  const properties = {
-    Name: notionProperties.title(title),
-  }
-
-  if (project) {
-    properties.Project = notionProperties.multiSelect([project])
-  }
-
-  if (date) {
-    properties.Date = notionProperties.date(date)
-  }
-
-  if (person) {
-    properties.Person = notionProperties.select(person)
-  }
-
-  if (priority) {
-    properties.Priority = notionProperties.select(priority)
-  }
-
-  if (impact) {
-    properties.Impact = notionProperties.select(impact)
-  }
-
-  if (projectStatus) {
-    properties['Project Status'] = notionProperties.select(projectStatus)
-  }
-
-  // Construir el contenido del cuerpo de la página
-  const children = []
-  if (body) {
-    children.push({
-      object: 'block',
-      type: 'paragraph',
-      paragraph: {
-        rich_text: [
-          {
-            type: 'text',
-            text: { content: body },
-          },
-        ],
-      },
-    })
-  }
 
   const response = await createDatabaseItem(DATABASE_ID, properties, children)
 

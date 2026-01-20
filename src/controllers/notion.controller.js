@@ -1,40 +1,24 @@
-import { createCard, createSmartCard } from '../services/notion.service.js'
+import { createSmartCard } from '../services/notion.service.js'
 import { uploadFile } from '../utils/supabase.util.js'
 import { randomUUID } from 'crypto'
 
-export const createNotionCard = async (req, res) => {
-  try {
-    const { title, text, project, person, priority, impact, date = new Date().toISOString().split('T')[0], projectStatus } = req.body
-
-    if (!title) {
-      return res.status(400).json({ error: 'El título es requerido' })
-    }
-
-    await createCard({
-      title,
-      body: text,
-      project,
-      person,
-      priority,
-      impact,
-      date,
-      projectStatus
-    })
-
-    res.status(201).json({ message: 'Tarjeta creada correctamente' })
-  } catch (error) {
-    console.error('Error creating card:', error)
-    res.status(500).json({ error: 'Error al crear la tarjeta' })
-  }
-}
-
+ /**
+ * @author Brayan Salas
+ * @description Create a smart Notion card based on a message and optional images
+ * @param {Object} req
+ * @param {Object} res
+ * @param {string} req.message - Message to analyze and create the card (required)
+ * @param {Object} req.files - Files uploaded
+ * @param {Array} req.files.images - Images uploaded
+ * @return {Object} 
+ */
 export const createSmartNotionCard = async (req, res) => {
   try {
     const { message } = req.body
     let images = req?.files?.images
 
     if (!message) {
-      return res.status(400).json({ error: 'El mensaje es requerido' })
+      return res.status(400).json({ error: 'Param "message" is required' })
     }
   
     let uploadedUrls = []
@@ -52,22 +36,21 @@ export const createSmartNotionCard = async (req, res) => {
                 upsert: false,
             })
 
-            console.log(result, 'Uploaded image to Supabase:')
             uploadedUrls.push(result.publicUrl)
         }
     }
 
     await createSmartCard(message, uploadedUrls)
 
-    res.status(201).json({ message: 'Tarjeta creada correctamente' })
+    res.status(201).json({ message: 'Card created successfully' })
   } catch (error) {
     console.error('Error creating smart card:', error)
 
     // Si es error de validación, devolver 400
-    if (error.message.startsWith('Mensaje no válido:')) {
+    if (error.message.startsWith('Invalid message:')) {
       return res.status(400).json({ error: error.message })
     }
 
-    res.status(500).json({ error: 'Error al crear la tarjeta' })
+    res.status(500).json({ error: 'Error creating card' })
   }
 }
