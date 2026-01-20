@@ -88,7 +88,12 @@ Responde ÚNICAMENTE con un JSON válido:
  * @param {string} message - Mensaje del usuario
  * @returns {Promise<Object>} - Datos estructurados para la tarjeta
  */
-export const analyzeAndGenerateCardData = async (message) => {
+export const analyzeAndGenerateCardData = async (message, uploadedUrls = []) => {
+  // Construir la sección de screenshots solo si hay URLs
+  const screenshotsSection = uploadedUrls.length > 0 
+    ? `\n\n## Screenshots adjuntas\n${uploadedUrls.map(url => `![Screenshot](${url})`).join('\n')}`
+    : ''
+
   const systemPrompt = `Eres un asistente que analiza reportes de bugs o solicitudes y genera datos estructurados para crear tickets.
 
 CONTEXTO DE LOS PROYECTOS:
@@ -159,7 +164,14 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura:
   try {
     // Limpiar la respuesta por si viene con markdown code blocks
     const cleanResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    return JSON.parse(cleanResponse)
+    const parsedResponse = JSON.parse(cleanResponse)
+
+    // Agregar las screenshots al contenido si hay URLs
+    if (uploadedUrls.length > 0) {
+      parsedResponse.content += screenshotsSection
+    }
+
+    return parsedResponse
   } catch (error) {
     console.error('Error parsing AI response:', response)
     throw new Error('Error al procesar la respuesta de la IA')
@@ -177,6 +189,23 @@ const markdownToNotionBlocks = (markdown) => {
 
   for (const line of lines) {
     if (!line.trim()) continue
+
+    // Imagen: ![alt](url)
+    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    if (imageMatch) {
+      const [, alt, url] = imageMatch
+      blocks.push({
+        object: 'block',
+        type: 'image',
+        image: {
+          type: 'external',
+          external: {
+            url: url,
+          },
+        },
+      })
+      continue
+    }
 
     // Heading 1
     if (line.startsWith('# ')) {
@@ -266,7 +295,7 @@ const markdownToNotionBlocks = (markdown) => {
  * @param {string} message - Mensaje del usuario
  * @returns {Promise<Object>} - La tarjeta creada
  */
-export const createSmartCard = async (message) => {
+export const createSmartCard = async (message, uploadedUrls = []) => {
   // Validar el mensaje primero
   const validation = await validateMessage(message)
   
@@ -275,7 +304,7 @@ export const createSmartCard = async (message) => {
   }
 
   // Analizar el mensaje con IA
-  const cardData = await analyzeAndGenerateCardData(message)
+  const cardData = await analyzeAndGenerateCardData(message, uploadedUrls)
 
   // Fecha actual
   const today = new Date().toISOString().split('T')[0]

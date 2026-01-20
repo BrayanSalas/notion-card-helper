@@ -12,8 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "@notionhq/client": "^5.7.0",
+    "@supabase/supabase-js": "^2.90.1",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
+    "express-fileupload": "^1.5.2",
     "node-fetch": "^2.7.0",
     "openai": "^6.16.0"
   },
