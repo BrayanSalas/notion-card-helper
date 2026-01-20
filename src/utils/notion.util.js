@@ -1,8 +1,17 @@
 import { Client } from '@notionhq/client'
+import fetch from 'node-fetch'
 
-const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
-})
+let notion = null
+
+const getNotionClient = () => {
+  if (!notion) {
+    notion = new Client({
+      auth: process.env.NOTION_API_KEY,
+      fetch,
+    })
+  }
+  return notion
+}
 
 /**
  * Obtiene información de una base de datos de Notion
@@ -10,7 +19,7 @@ const notion = new Client({
  * @returns {Promise<Object>} - Información de la base de datos
  */
 export const getDatabase = async (databaseId) => {
-  const response = await notion.databases.retrieve({
+  const response = await getNotionClient().databases.retrieve({
     database_id: databaseId,
   })
   return response
@@ -24,7 +33,7 @@ export const getDatabase = async (databaseId) => {
  * @returns {Promise<Array>} - Lista de elementos
  */
 export const queryDatabase = async (databaseId, filter = undefined, sorts = undefined) => {
-  const response = await notion.databases.query({
+  const response = await getNotionClient().databases.query({
     database_id: databaseId,
     filter,
     sorts,
@@ -40,7 +49,7 @@ export const queryDatabase = async (databaseId, filter = undefined, sorts = unde
  * @returns {Promise<Object>} - El elemento creado
  */
 export const createDatabaseItem = async (databaseId, properties, children = []) => {
-  const response = await notion.pages.create({
+  const response = await getNotionClient().pages.create({
     parent: {
       database_id: databaseId,
     },
@@ -57,7 +66,7 @@ export const createDatabaseItem = async (databaseId, properties, children = []) 
  * @returns {Promise<Object>} - El elemento actualizado
  */
 export const updateDatabaseItem = async (pageId, properties) => {
-  const response = await notion.pages.update({
+  const response = await getNotionClient().pages.update({
     page_id: pageId,
     properties,
   })
@@ -70,11 +79,20 @@ export const updateDatabaseItem = async (pageId, properties) => {
  * @returns {Promise<Object>} - Confirmación
  */
 export const archiveDatabaseItem = async (pageId) => {
-  const response = await notion.pages.update({
+  const response = await getNotionClient().pages.update({
     page_id: pageId,
     archived: true,
   })
   return response
+}
+
+/**
+ * Lista los usuarios del workspace de Notion
+ * @returns {Promise<Array>} - Lista de usuarios
+ */
+export const listUsers = async () => {
+  const response = await getNotionClient().users.list()
+  return response.results
 }
 
 /**
@@ -113,4 +131,4 @@ export const notionProperties = {
   }),
 }
 
-export default notion
+export default getNotionClient
