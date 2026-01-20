@@ -1,7 +1,7 @@
 {
-  "name": "notion-hotfix-helper",
+  "name": "notion-card-helper",
   "version": "1.0.0",
-  "description": "Node.js Express API with controllers, services and utils structure",
+  "description": "Node.js project to create Notion smart cards using OpenAI and Supabase",
   "main": "src/index.js",
   "scripts": {
     "start": "babel-node src/index.js",
