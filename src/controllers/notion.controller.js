@@ -39,6 +39,12 @@ export const createSmartNotionCard = async (req, res) => {
     res.status(201).json({ message: 'Tarjeta creada correctamente' })
   } catch (error) {
     console.error('Error creating smart card:', error)
+
+    // Si es error de validación, devolver 400
+    if (error.message.startsWith('Mensaje no válido:')) {
+      return res.status(400).json({ error: error.message })
+    }
+    
     res.status(500).json({ error: 'Error al crear la tarjeta' })
   }
 }
