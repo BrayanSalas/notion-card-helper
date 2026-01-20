@@ -1,5 +1,5 @@
 {
-  "name": "newproject",
+  "name": "notion-hotfix-helper",
   "version": "1.0.0",
   "description": "Node.js Express API with controllers, services and utils structure",
   "main": "src/index.js",
