@@ -36,7 +36,7 @@ src/
     ├── notion.util.js          # Utilidades para interactuar con la API de Notion
     ├── openai.util.js          # Utilidades para interactuar con OpenAI
     └── supabase.util.js        # Utilidades para storage de Supabase
-    └── supabase.util.js        # Utilidades para webhook de Telegram
+    └── telegram.util.js        # Utilidades para webhook de Telegram
 ```
 
 ## Configuración
