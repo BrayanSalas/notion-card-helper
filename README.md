@@ -2,6 +2,11 @@
 
 API REST en Node.js para la creación inteligente de tickets en Notion, utilizando IA (OpenAI) para analizar y estructurar reportes de bugs o solicitudes.
 
+## Demo
+
+[![Ver demo](https://drive.google.com/uc?export=view&id=1Y3DfgSDiAwlN4P0e7AOdkvraB3WJEiju)](https://drive.google.com/file/d/118KC4zLflgMOAMibwre9RefIl2oApL1P/view?usp=sharing)
+
+
 ## Tecnologías
 
 | Tecnología | Versión | Descripción |
@@ -22,14 +27,16 @@ src/
 ├── index.js                    # Punto de entrada de la aplicación
 ├── controllers/
 │   └── notion.controller.js    # Controladores para endpoints de Notion
+│   └── telegram.controller.js  # Controladores para endpoints de Telegram
 ├── routes/
-│   └── notion.routes.js        # Definición de rutas de la API
+│   └── app.routes.js           # Definición de rutas de la API
 ├── services/
 │   └── notion.service.js       # Lógica de negocio (validación, análisis IA, creación de tickets)
 └── utils/
     ├── notion.util.js          # Utilidades para interactuar con la API de Notion
     ├── openai.util.js          # Utilidades para interactuar con OpenAI
     └── supabase.util.js        # Utilidades para storage de Supabase
+    └── supabase.util.js        # Utilidades para webhook de Telegram
 ```
 
 ## Configuración
@@ -92,35 +99,13 @@ PORT=3000
 npm run dev
 ```
 
-### Modo producción
-
-```bash
-npm start
-```
-
 El servidor estará disponible en `http://localhost:3000`
 
 ## Endpoints
 
-### POST `/api/notion/card`
-
-Crea una tarjeta en Notion con datos específicos.
-
-**Body:**
-```json
-{
-  "title": "Título del ticket",
-  "text": "Descripción en markdown",
-  "project": "Frontend|Backend",
-  "priority": "Very High|High|Medium|Low|Very Low",
-  "impact": "Very High|High|Medium|Low|Very Low",
-  "date": "2026-01-19"
-}
-```
-
 ### POST `/api/notion/smart-card`
 
-Crea una tarjeta inteligente usando IA para analizar el mensaje.
+Crea una tarjeta inteligente usando IA para analizar el mensaje. (Utilizado de ejemplo para corroborar funcionamiento para el webhook de Telegram)
 
 **Body (form-data):**
 | Campo | Tipo | Descripción |
@@ -135,6 +120,15 @@ Crea una tarjeta inteligente usando IA para analizar el mensaje.
 }
 ```
 
+### POST `/api/telegram/webhook`
+
+Webhook para utilizar el Bot de Telegram (Hay que crear previamente un bot dentro de BotFather)
+
+**Body (form-data):**
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `message` | string | Descripción del bug o solicitud |
+
 ## Funcionalidades de IA
 
 - **Validación de mensajes**: Filtra mensajes no relevantes para tickets técnicos
@@ -146,7 +140,6 @@ Crea una tarjeta inteligente usando IA para analizar el mensaje.
 
 | Comando | Descripción |
 |---------|-------------|
-| `npm start` | Inicia el servidor en producción |
 | `npm run dev` | Inicia el servidor en modo desarrollo con watch |
 
 ## Notas
@@ -154,6 +147,9 @@ Crea una tarjeta inteligente usando IA para analizar el mensaje.
 - Las imágenes subidas se almacenan en Supabase Storage y se adjuntan automáticamente al ticket
 - El contenido se convierte de Markdown a bloques de Notion (headings, listas, imágenes, etc.)
 - La IA usa GPT-3.5-turbo por defecto para el análisis de mensajes
+- La versión actual del webhook de telegram solo soporta crear un ticket por mensaje
+- La siguiente versión concatenará mensajes para evitar crear tickets por cada mensaje
+- La última versión soportara subir imágenes para que tenga el soporte completo del endpoint original para Postman
 
 ## Licencia
 
