@@ -31,7 +31,7 @@ El usuario que reporta el problema no necesita seleccionar estos valores manualm
 
 ### NOTA
 
-Existe otro endpoint llamado smart-card que sirve para crear las tarjetas por medio de un endpoint, este tiene incluso una mayor funcionalidad ya que acepta imágenes. En una segunda revisión de la app se realizará esa carga para que pueda hacerlo desde el bot de Telegram.
+Existe otro endpoint llamado smart-card que sirve para crear las tarjetas, este tiene incluso una mayor funcionalidad ya que acepta imágenes. En una segunda revisión de la app se realizará esa carga para que pueda hacerlo desde el bot de Telegram.
 
 ## Tecnologías
 
