@@ -2,10 +2,36 @@
 
 API REST en Node.js para la creación inteligente de tickets en Notion, utilizando IA (OpenAI) para analizar y estructurar reportes de bugs o solicitudes.
 
-## Demo
+## Demo: Creación de tarjetas Notion vía Telegram
 
+Click en la imagen inferior para ver el demo.
 [![Ver demo](https://drive.google.com/uc?export=view&id=1Y3DfgSDiAwlN4P0e7AOdkvraB3WJEiju)](https://drive.google.com/file/d/118KC4zLflgMOAMibwre9RefIl2oApL1P/view?usp=sharing)
 
+En esta demo se puede observar cómo se crean tarjetas de Notion a través de mensajes de Telegram.
+
+### Objetivo
+
+El propósito de este flujo es que la persona que reporta un hotfix pueda enviar un mensaje simple, el cual es procesado por IA y transformado en un documento de Notion con una estructura bien definida. Esto facilita que el desarrollador comprenda rápidamente el problema reportado.
+
+Además, la IA genera preguntas relevantes para que quien reportó el issue pueda complementar la información directamente en la tarjeta.
+
+### Campos automáticos
+
+La tarjeta incluye los siguientes campos, todos asignados automáticamente por la IA según el contexto del mensaje:
+
+- **Fecha**
+- **Prioridad**
+- **Impacto**
+- **Proyecto**
+- **Estado**
+
+### Beneficio
+
+El usuario que reporta el problema no necesita seleccionar estos valores manualmente ni asignar puntuaciones. La IA toma estas decisiones basándose en el contexto proporcionado en el prompt, agilizando significativamente el proceso de reporte.
+
+### NOTA
+
+Existe otro endpoint llamado smart-card que sirve para crear las tarjetas por medio de un endpoint, este tiene incluso una mayor funcionalidad ya que acepta imágenes. En una segunda revisión de la app se realizará esa carga para que pueda hacerlo desde el bot de Telegram.
 
 ## Tecnologías
 
@@ -76,6 +102,9 @@ NOTION_DATABASE_ID=id_de_tu_base_de_datos_notion
 SUPABASE_URL=tu_url_de_proyecto_supabase
 SUPABASE_SERVICE_KEY=tu_service_key_de_supabase
 
+# Telegram
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
 # Server
 PORT=3000
 ```
@@ -90,6 +119,17 @@ PORT=3000
 
 1. Crea un bucket llamado `notion-attachments` en Supabase Storage
 2. Configura las políticas de acceso público para lectura
+
+### 6. Configurar Telegram
+
+1. Crear un bot en BotFather dentro de Telegram siguiendo la [documentación oficial](https://core.telegram.org/bots/tutorial) (crear un bot, colocarle un nombre, obtener token)
+2. BotFather entrega el token y se utiliza para registrar un webhook al endpoint de tipo POST: https://api.telegram.org/bot$token/setWebhook y que el body sea: `
+{
+    "url": "ENDPOINT DEL WEBHOOK"
+}
+`
+3. Se ingresa el token en el apartado del .env
+
 
 ## Ejecución
 
